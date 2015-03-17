@@ -45,6 +45,8 @@ object GitLogGenerator {
 
   }
 
+
+  //--date-order
   def main(args: Array[String]): Unit = {
     // 1. .git의 리포지토리로부터 git 로그를 추출함.
     // 2. 로그를 파싱해서 데이터를 MongoDB에 넣는다

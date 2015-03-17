@@ -19,24 +19,26 @@ class FileChange(f: String, date: DateTime) {
   var times = 0
   var amount = 0
 
-  def summary = name + "(" + times + ", " + amount + "): \t" + birth + "~" + death + ", cochanged#" + cochanges.size //.values.mkString("\n\t")
+  def summary = name + " (" + times + ", " + amount + "): \t" + birth + "~" + death + ", cochanged#" + cochanges.size //.values.mkString("\n\t")
 }
 
 import ChangeType._
+
 object GitChanges {
+
   def getchanges(commits: List[GitCommit], details: Map[String, List[GitDiff]]) : Map[String, FileChange] = {
     var fchanges = Map[String, FileChange]()
-    var duplicates = Map[(String, String), FileChange]()
+
     commits.sortWith((c1, c2) => c1.date.isBefore(c2.date)).foreach(c => {
       val diffs = details(c.commitid)
       var cochanged = List[FileChange]()
       diffs.foreach(d => {
         d.changetype match {
           case Added => {
+            if (d.to.contains("/") && d.to.substring(d.to.lastIndexOf("/") + 1).equals("TestClassTest.java")) println("Added. " + d.to + " " + c.date + " " + c.commitid)
             if (fchanges.contains(d.to)) {
-              duplicates += ((d.to, c.commitid) -> fchanges(d.to))
               fchanges -= d.to
-              println("duplicate added - " + d.to + " --- " + c.commitid)
+              println("duplicate added - " + c.date + ": " + d.to + " --- " + c.commitid)
             }
             //assert(!fchanges.contains(d.to), c.summary + ": " + d.summary)
             val fc = new FileChange(d.to, c.date)
@@ -44,23 +46,33 @@ object GitChanges {
 
             fc.times += 1
             fc.amount += d.nadd
-            if (d.ndel == 0) {
-              println("file added but it has deletion lines " + d.to + ", " + c.commitid)
+            if (d.ndel > 0) {
+              println("file added but it has deletion lines (" + d.ndel + ", " + c.date + "), " + d.to + ", " + c.commitid)
             }
             cochanged ::= fc
           }
+
           case Deleted => {
-            assert(fchanges.contains(d.from))
+            if (d.from.contains("/") && d.from.substring(d.from.lastIndexOf("/")+1).equals("TestClassTest.java")) println("Deleted. " + d.from + " " + c.date + " " +c.commitid)
+            if (!fchanges.contains(d.from)) {
+              println("duplicate deleted - " + d.from + " --- " + c.commitid)
+              fchanges += (d.from -> (new FileChange(d.from, c.date)))
+            }
             val fc = fchanges(d.from)
             fc.death = c.date
             fc.times += 1
             fc.amount += d.ndel
+            fchanges -= d.from
+
             cochanged ::= fc
           }
+
           case Modified => {
+            assert(d.from.equals(d.to), "Modified. from should equal to to")
+            if (d.to.contains("/") && d.to.substring(d.to.lastIndexOf("/") + 1).equals("TestClassTest.java")) println("Modified. " + c.date + " " + d.to + ", " + c.commitid)
             if (!fchanges.contains(d.to)) {
               //assert(fchanges.contains(d.to), c.summary + " --- " + d.summary)
-              println("file modified that has not been added (maybe simultaneously file modified and added. " + d.to + ", " + c.commitid )
+              println("simultaneous file modification and addition. " + d.to + ", " + c.date + "), " + c.commitid )
               fchanges += (d.to -> (new FileChange(d.to, c.date)))
             }
             val fc = fchanges(d.to)
@@ -68,25 +80,42 @@ object GitChanges {
             fc.amount += (d.ndel + d.nadd)
             cochanged ::= fc
           }
-          case Renamed => {
-            assert(fchanges.contains(d.from), "renamed so that " + d.from + " should have been added")
-            if (fchanges.contains(d.to)) {
-              duplicates += ((d.to, c.commitid) -> fchanges(d.to))
-              fchanges -= d.to
-              println("file renamed to that has already been added (maybe simultaneously file renamed and added " + d.to + ", " + c.commitid)
-            }
-            val fcfrom = fchanges(d.from)
-            fcfrom.death = c.date
-            val fc = new FileChange(d.to, c.date)
-            fchanges += (d.to -> fc)
 
-            fc.times = fcfrom.times + 1
-            fc.amount = fcfrom.amount + d.nadd
-            cochanged ::= fc
-            cochanged ::= fcfrom
+          case Renamed => {
+            if (d.from.contains("/") && d.from.substring(d.from.lastIndexOf("/") + 1).equals("TestClassTest.java")) {
+              println("Renamed. " + d.from + ", " + c.commitid)
+              println("\t" + d.to + " " + c.date)
+            }
+
+            if (!fchanges.contains(d.from)) {
+              println("duplicate rename commit. might be rename commit in other branch for already renamed file")
+              println("\t" + d.from + "->" + d.to + " in " + c.commitid)
+
+              //later commit needs to be reflected
+              //from has been removed by previous commit
+              val prev_to = fchanges(d.to)
+              val prev_from = prev_to.renamedfrom
+              val amount = prev_from.amount + (d.nadd + d.ndel)
+
+              prev_to.amount = if (prev_to.amount > amount) prev_to.amount else amount
+            }
+            else {
+              val fcfrom = fchanges(d.from)
+              fcfrom.death = c.date
+
+              val fc = new FileChange(d.to, c.date)
+              fchanges += (d.to -> fc)
+
+              fc.times = fcfrom.times + 1
+              fc.amount = fcfrom.amount + ( d.nadd + d.ndel )
+              fc.renamedfrom = fcfrom
+              cochanged ::= fc
+
+              fchanges -= d.from
+            }
           }
           case _ => {
-            assert(true)
+            assert(false)
           }
         }
       })

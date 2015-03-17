@@ -62,54 +62,54 @@ class GitDiff(strs: List[String]) {
 
   def summary = changetype + "(" + nadd + "+," + ndel + "-): " + from + " -> " + to
 
-  strs.tail.foreach(s => {
-    val w = s.split(" ").map(_.trim).toList
-    if (w.size > 0) {
-      w.head match {
-        case "new" => {
-          changetype = Added
+  {
+    var header = true
+    strs.tail.foreach(s => {
+      if (header && s.length >= 3) {
+        val s3 = s.substring(0, 3)
+        val w = s.split(" ").map(_.trim)
+        s3 match {
+          case "new" => {
+            if ( w(1).equals("file") ) changetype = Added
+          }
+          case "ren" => {
+            changetype = Renamed
+            if (w(1).equals("from")) assert(w(2).equals(from), w(2) + ", expected: " + from)
+            else if (w(1).equals("to")) assert(w(2).equals(to), w(2) + ", expected: " + to)
+          }
+          case "del" => changetype = Deleted
+          case "sim" => similarity = w(2).substring(0, w(2).length - 1).toInt
+          case "ind" => {}
+          case "dis" => {}
+          case "cop" => {}
+          case "old" => {}
+          case "Bin" => { /* Binary files */}
+          case "+++" => {
+            //assert(w(1).substring(2).equals(from) || w(1).startsWith("/dev"), w(1) + ", expected: " + from)
+          }
+          case "---" => {
+            //assert(w(1).substring(2).equals(to) || w(1).startsWith("/dev"), w(1) + ", expected: " + to)
+          }
+          case "@@ " => header = false
+          case _ => assert(false, "this line is not yet considered. " + header + ", " + s)
         }
-        case "rename" => {
-          changetype = Renamed
-          if (w(1).equals("from")) assert(w(2).equals(from), w(2) + ", expected: " + from)
-          else if (w(1).equals("to")) assert(w(2).equals(to), w(2) + ", expected: " + to)
-        }
-        case "deleted" => {
-          changetype = Deleted
-        }
-        case "similarity" => {
-          similarity = w(2).substring(0, w(2).length - 1).toInt
-        }
-        case "index" => {}
-        case "dissimilarity" => {}
-        case "copy" => {}
-        case "old" => {}
-        case "+++" => {
-          //assert(w(1).substring(2).equals(from) || w(1).startsWith("/dev"), w(1) + ", expected: " + from)
-        }
-        case "---" => {
-          //assert(w(1).substring(2).equals(to) || w(1).startsWith("/dev"), w(1) + ", expected: " + to)
-        }
-        case _ => {
-          if (s.length > 0 ) {
-            s.charAt(0) match {
-              case '+' => {
-                nadd += 1
-              }
-              case '-' => {
-                ndel += 1
-              }
-              case ' ' => {}
-              case _ => {
-                //TODO: Error 처리
-                assert(true, "this line is not yet considered: " + s)
-              }
+      }
+      else {
+        // s.length < 3
+        if (s.length > 0) {
+          s.charAt(0) match {
+            case '+' => nadd += 1
+            case '-' => ndel += 1
+            case ' ' => {}
+            case _ => {
+              //TODO: Error 처리
+              assert(true, "this line is not yet considered: " + s)
             }
           }
         }
       }
-    }
-  })
+    })
+  }
 
 
   // +, -, space
@@ -173,7 +173,8 @@ object GitCommitDetails {
   }
 
   def main(args: Array[String]) = {
-    val details = getall("junit")
-    println(details.map(kv => kv._1 + ": " + kv._2.mkString("\n")))
+    // val details = getall("junit"); println(details.map(kv => kv._1 + ": " + kv._2.mkString("\n")))
+    val commit = (new File(Configuration.commitdir("junit"))).listFiles.filter(_.getName.equals("a72b0dbef4b01e8ad0b832d9a579dd7fabd5a071")).map(_.getAbsolutePath).map(get(_)).toMap
+    println(commit.map(kv => kv._1 + " : " + kv._2.map(_.summary).mkString("\n")))
   }
 }
