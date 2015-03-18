@@ -3,7 +3,7 @@ package gitlog
 import java.io.File
 import java.nio.charset._
 
-import config.Configuration
+import layer.configuration.Configuration
 import scala.io.{Codec, Source}
 
 /**
@@ -166,15 +166,14 @@ object GitCommitDetails {
     (cid, diffs.reverse)
   }
 
-  def getall(p: String): Map[String, List[GitDiff]] = {
+  def getall(p: String, commits: List[GitCommit]): Map[String, List[GitDiff]] = {
     val dir = new File(Configuration.commitdir(p))
-    val files = dir.listFiles.map(_.getAbsolutePath) //.take(10)
-    files.map(get(_)).toMap
+    commits.map(c => get(dir + "/" + c.commitid)).toMap
   }
 
   def main(args: Array[String]) = {
-    // val details = getall("junit"); println(details.map(kv => kv._1 + ": " + kv._2.mkString("\n")))
-    val commit = (new File(Configuration.commitdir("junit"))).listFiles.filter(_.getName.equals("a72b0dbef4b01e8ad0b832d9a579dd7fabd5a071")).map(_.getAbsolutePath).map(get(_)).toMap
+    val dir = new File(Configuration.commitdir("junit"))
+    val commit = dir.listFiles.filter(_.getName.equals("a72b0dbef4b01e8ad0b832d9a579dd7fabd5a071")).map(_.getAbsolutePath).map(get(_)).toMap
     println(commit.map(kv => kv._1 + " : " + kv._2.map(_.summary).mkString("\n")))
   }
 }

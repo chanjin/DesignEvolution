@@ -11,3 +11,5 @@ resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 scalacOptions in Test ++= Seq("-Yrangepos")
 
 libraryDependencies += "joda-time" % "joda-time" % "2.7"
+
+libraryDependencies += "org.scala-lang.modules" % "scala-parser-combinators_2.11" % "1.0.2"

@@ -1,4 +1,4 @@
-package config
+package layer.configuration
 
 /**
  * Created by chanjinpark on 15. 3. 14..

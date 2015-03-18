@@ -6,7 +6,7 @@ package gitlog
 
 import java.io.File
 
-import config.Configuration
+import layer.configuration.Configuration
 
 import scala.io.Source
 import sys.process._
@@ -14,13 +14,14 @@ import sys.process._
 object GitLogGenerator {
 
 
-  // git --git-dir /Users/chanjinpark/GitHub/junit/.git log --name-status --date=iso
+  // git --git-dir /Users/chanjinpark/GitHub/junit/.git log --name-status --date=iso --date-order
   // git --git-dir /Users/chanjinpark/GitHub/junit/.git show --date=iso 47707e8d86ad0927f6c67472615646949d313ab3
 
+  // --date-order option is for chronical order of commits
   def generateLogs(pname: String) = {
     val f = Configuration.logfile(pname)
     val repo = Configuration.gitrepo(pname)
-    val command = "git --git-dir " + repo + " log --name-status --date=iso"
+    val command = "git --git-dir " + repo + " log --name-status --date=iso --date-order"
 
     ( command #> new File(f) )!
   }
@@ -33,7 +34,9 @@ object GitLogGenerator {
   }
 
   def readCommitDetails(p: String) : Map[String, List[GitDiff]] = {
-    GitCommitDetails.getall(p)
+    val commits = GitCommit.from(Source.fromFile("gitlogs/junit.txt").getLines())
+    val clist = commits.values.toList.sortWith((c, c1) => c.isBefore(c1))
+    GitCommitDetails.getall(p, clist)
   }
 
   def storeLog2Mongo(pname: String) = {
@@ -53,7 +56,7 @@ object GitLogGenerator {
     generateLogs("junit")
     val commits = GitCommit.from(Source.fromFile("gitlogs/junit.txt").getLines())
     commits.foreach(c => {
-      generateCommitDetails("junit", c.commitid)
+      generateCommitDetails("junit", c._2.commitid)
     } )
   }
 }

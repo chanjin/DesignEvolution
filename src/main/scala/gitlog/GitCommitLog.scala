@@ -41,18 +41,20 @@ A	src/test/java/org/junit/runners/CustomBlockJUnit4ClassRunnerTest.java
 M	src/test/java/org/junit/tests/AllTests.java
  */
 
-class GitCommit(cid: String, a: String, d: DateTime, comm: List[String], fs: List[(String, Char)]) {
+class GitCommit(cid: String, a: String, d: DateTime, ord: Int, comm: List[String], fs: List[(String, Char)]) {
   val commitid = cid
   val author = a
   val date = d
   val comment = comm
   val changedfs = fs
+  private val order = ord // the recent commit order is 0
+  def isBefore(c: GitCommit) = order > c.order
 
   def summary = commitid + ": " + date + " by " + author +  ", " + changedfs.length + " files are changed"
 }
 
 object GitCommit {
-  private def commitFrom(strs: List[String]): GitCommit = {
+  private def commitFrom(strs: List[String], commit_order: Int): (String, GitCommit) = {
     val cid = strs.head.substring(7)
     var author = ""
     var parents: List[String] = null
@@ -91,19 +93,21 @@ object GitCommit {
         comments ::= l
     })
 
-    new GitCommit(cid, author, date, comments.reverse, changedfs.reverse)
+    (cid, new GitCommit(cid, author, date, commit_order, comments.reverse, changedfs.reverse))
   }
 
-  def from(it: Iterator[String]) : List[GitCommit] = {
-    var commits = List[GitCommit]()
+  def from(it: Iterator[String]) : Map[String, GitCommit] = {
+    var commits = List[(String, GitCommit)]()
 
     var beginning = true
+    var order = -1
     var strs = List[String]()
     while (it.hasNext) {
       val l = it.next
       if ( l.startsWith("commit ")) {
         if (!beginning) {
-          commits ::= commitFrom(strs.reverse)
+          order += 1
+          commits ::= commitFrom(strs.reverse, order)
           strs = List[String]()
         }
         else {
@@ -112,20 +116,24 @@ object GitCommit {
       }
       strs = l :: strs
     }
-    if (!beginning)
-      commits ::= commitFrom(strs.reverse)
+    if (!beginning) {
+      order += 1
+      commits ::= commitFrom(strs.reverse, order)
+    }
 
-    commits.reverse
+    commits.toMap
   }
 }
 
 object GitCommitLog {
-  def getCommits(p: String): List[GitCommit] = {
+  def getCommits(p: String): Map[String, GitCommit] = {
     GitCommit.from(Source.fromFile("gitlogs/" + p + ".txt").getLines())
   }
 
   def main(args: Array[String]): Unit = {
     val commits = getCommits("junit")
-    println(commits.map(_.summary).mkString("\n"))
+    println(commits.head._2.summary)
+    println(commits.last._2.summary)
+    //println(commits.map(_.summary).mkString("\n"))
   }
 }
