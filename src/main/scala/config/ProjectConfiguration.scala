@@ -75,7 +75,7 @@ object Project {
         PackageAnalysis.run(new StudyConfiguration(parse(selproject)))
     }*/
 
-    private var proj: ProjectBasicInfo = null
+    var proj: ProjectBasicInfo = null
 
     def parse(filename: String): ProjectConfiguration = {
         val parser = new ProjectDSL

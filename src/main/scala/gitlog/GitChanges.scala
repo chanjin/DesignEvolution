@@ -36,7 +36,7 @@ object GitChanges {
       diffs.foreach(d => {
         d.changetype match {
           case Added => {
-            if (d.to.contains("/") && d.to.substring(d.to.lastIndexOf("/") + 1).startsWith("LICENSE")) println("Added. " + d.to + " " + c.date + " " + c.commitid)
+            //if (d.to.contains("/") && d.to.substring(d.to.lastIndexOf("/") + 1).startsWith("LICENSE")) println("Added. " + d.to + " " + c.date + " " + c.commitid)
             if (fchanges.contains(d.to)) {
               fchanges -= d.to
               println("duplicate added - " + c.date + ": " + d.to + " --- " + c.commitid)
@@ -54,7 +54,7 @@ object GitChanges {
           }
 
           case Deleted => {
-            if (d.from.contains("/") && d.from.substring(d.from.lastIndexOf("/")+1).startsWith("LICENSE")) println("Deleted. " + d.from + " " + c.date + " " +c.commitid)
+            //if (d.from.contains("/") && d.from.substring(d.from.lastIndexOf("/")+1).startsWith("LICENSE")) println("Deleted. " + d.from + " " + c.date + " " +c.commitid)
             if (!fchanges.contains(d.from)) {
               println("duplicate deleted - " + d.from + " --- " + c.commitid)
               fchanges += (d.from -> (new FileChange(d.from, c.commitid)))
@@ -70,7 +70,7 @@ object GitChanges {
 
           case Modified => {
             //assert(d.from.equals(d.to), "Modified. from should equal to to")
-            if (d.to.contains("/") && d.to.substring(d.to.lastIndexOf("/") + 1).startsWith("LICENSE")) println("Modified. " + c.date + " " + d.to + ", " + c.commitid)
+            //if (d.to.contains("/") && d.to.substring(d.to.lastIndexOf("/") + 1).startsWith("LICENSE")) println("Modified. " + c.date + " " + d.to + ", " + c.commitid)
             if (!fchanges.contains(d.to)) {
               //assert(fchanges.contains(d.to), c.summary + " --- " + d.summary)
               println("simultaneous file modification and addition. " + d.to + ", " + c.date + "), " + c.commitid )
@@ -83,10 +83,10 @@ object GitChanges {
           }
 
           case Renamed => {
-            if (d.from.contains("/") && d.from.substring(d.from.lastIndexOf("/") + 1).startsWith("LICENSE")) {
+            /*if (d.from.contains("/") && d.from.substring(d.from.lastIndexOf("/") + 1).startsWith("LICENSE")) {
               println("Renamed. " + d.from + ", " + c.commitid)
               println("\t" + d.to + " " + c.date)
-            }
+            }*/
 
             if (!fchanges.contains(d.from)) {
               println("duplicate rename commit. might be rename commit in other branch for already renamed file")
@@ -129,7 +129,7 @@ object GitChanges {
     fchanges
   }
 
-  def changesAfter(p: String, cid: String) = {
+  def changesAfter(p: String, cid: String, paths: List[String], extensions: List[String]) = {
     val commits = GitCommitLog.getCommits(p)
     val clist = commits.values.toList.sortWith((c, c1) => c.isBefore(c1))
     //println(clist.map(_.summary).mkString("\n"))
@@ -139,13 +139,18 @@ object GitChanges {
     val details = GitCommitDetails.getall(p, clist)
 
     val (before, after) = clist.span(!_.commitid.equals(cid))
-    val changes = getchanges(clist, details)
+    val changes = {
+      val chs = getchanges(clist, details)
+      chs.filter(f => paths.exists(p => f._1.startsWith(p)) && extensions.exists(ext => f._1.endsWith(ext)))
+    }
 
     println(changes.map(_._2.summary).mkString("\n"))
 
-    val changesbefore = getchanges(before, details)
-    println(changesbefore.map(_._2.summary).mkString("\n"))
-
+    val changesbefore = {
+      val chs = getchanges(before, details)
+      chs.filter(f => paths.exists(p => f._1.startsWith(p)) && extensions.exists(ext => f._1.endsWith(ext)))
+    }
+    //println(changesbefore.map(_._2.summary).mkString("\n"))
 
     (commits, details, changes, changesbefore)
   }

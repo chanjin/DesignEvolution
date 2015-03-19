@@ -5,11 +5,15 @@ package layer.configuration
  */
 object Configuration {
   val gitlogs = "gitlogs"
+  val gitsrc = "gitsrc"
   val projects = List("junit")
 
   def logfile(pname: String) = {
     gitlogs + "/" + pname + ".txt"
   }
+
+  def srcdir(p: String) = gitsrc + "/" + p
+  def jarfile(p: String, jar: String) = gitsrc + "/" + p + "/" + jar
 
   def commitdir(pname: String) = {
     val dir = gitlogs + "/" + pname
@@ -20,4 +24,5 @@ object Configuration {
   def gitrepo(pname: String) = {
     "/Users/chanjinpark/GitHub/" + pname + "/.git"
   }
+
 }

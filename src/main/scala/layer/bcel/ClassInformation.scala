@@ -2,7 +2,7 @@
 /**
  * ClassInformation.scala
  *
- * 	Project: DesignRecovery
+ * Project: DesignRecovery
  * Copyright (c) 2011 Chanjin Park
  * License - GNU LESSER GENERAL PUBLIC LICENSE v3.0 (LGPL v3.0)
  *
@@ -20,9 +20,9 @@ import org.apache.bcel.generic.ObjectType
 import org.apache.bcel.generic.Type
 
 
-
 object ClassInformation {
   private var repository: org.apache.bcel.util.Repository = null
+
   def setRepo(repo: org.apache.bcel.util.Repository) = repository = repo
 
   def getOverridingMethods(cls: JavaClass, ancestor: JavaClass) = {
@@ -101,11 +101,16 @@ object ClassInformation {
 }
 
 object ClassAnalysisRule {
+
   import java.util.regex.Pattern
+
   private var _exclude = List("java[.].*", "javax[.].*", "sun[.].*", "sunw[.].*",
     "com[.]sun[.].*", "org[.]omg[.].*", "org[.]w3c[.].*", "org[.]xml[.].*", "net[.]jini[.].*")
+
   def getExcludeTypes = _exclude
+
   def setExcludeTypes(v: Array[String]) = _exclude = v.toList
+
   def isExcluded(clsname: String) = _exclude.exists(ign => (Pattern.matches(ign, clsname)))
 
   def getObjectType(typ: Type): Type = {
