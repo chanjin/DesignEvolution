@@ -50,6 +50,29 @@ class GeneralizationAnalyzer(commitmap: Map[String, GitCommit]) {
     val deletedfiles = chb.values.filter(f => !ch.contains(f.name)).toList
     (addedfiles, deletedfiles, renamed)
   }
+
+
+  // 같이 변경된 파일들의 정보. 누구와 몇번?. 이전과 전체.
+  def cochange(ch: Map[String, FileChange], chb: Map[String, FileChange]): (Map[String, Map[String, Int]], Map[String, Map[String, Int]]) = {
+    def sumCochange(f: String, cochanges: Map[String, List[FileChange]]): Map[String, Int] = {
+      val fcoc = cochanges.foldLeft(Map[String, Int]())((m, coc) => {
+          if (coc._1.equals(f)) m
+          else if (m.contains(coc._1)) {
+            val cnt = m(coc._1)
+            (m - coc._1) + (coc._1 -> (cnt + 1))
+          }
+          else
+            m + (coc._1 -> 1)
+      })
+
+      fcoc.filter(p => p._2 > 0).toMap
+    }
+
+    val all = ch.map(f => f._1 -> sumCochange(f._1, f._2.cochanges))
+    val bef = chb.map(f => f._1 -> sumCochange(f._1, f._2.cochanges))
+    (all, bef)
+  }
+
 }
 
 /*
@@ -76,13 +99,26 @@ object GeneralizationAnalyzer {
     (ta._1, ta._2, ta._1.toDouble/ta._3, ta._2.toDouble/ta._3, ta._3)
   }
 
+  def classNameofFile(f: String, classpath: List[String]): String = {
+    val path = classpath.filter(p => f.startsWith(p))
+    if (path.length == 1 ) {
+      f.substring(path.head.length, f.lastIndexOf(".")).replace("/", ".")
+    }
+    else {
+      assert(false, "not matched " + f)
+      ""
+    }
+  }
+
   def main(args: Array[String]) = {
     // junit 4.11 c2e4d911fadfbd64444fb285342a8f1b72336169,  @marcphilipp marcphilipp released this on 15 Nov 2012 · 747 commits to master since this release
     val p = "junit"
     val f = Configuration.jarfile(p, "junit-4.11.jar")
     val cid = "c2e4d911fadfbd64444fb285342a8f1b72336169"
 
+    //만약, class path가 달라졌다면, cp1을 새로 정의할 필요
     val cp = List("src/main/java/") //, "src/test/java/")
+
     val extension = List("java", "scala")
     val (c, cd, ch, chbefore) = GitChanges.changesAfter (p, cid, cp, extension)
 
@@ -91,18 +127,8 @@ object GeneralizationAnalyzer {
     val gens = StructureExtractor.extractGeneralization(tdg).map(gs => (gs._1, gs._2.filter(!_._2.contains("$")))).filter(gs => gs._2.length > 0).toMap
     val classes = tdg.nodes.map(_._1).filter(!_.contains("$"))
 
-    def classNameofFile(f: String): String = {
-      val path = cp.filter(p => f.startsWith(p))
-      if (path.length == 1 ) {
-        f.substring(path.head.length, f.lastIndexOf(".")).replace("/", ".")
-      }
-      else {
-        assert(false, "not matched " + f)
-        ""
-      }
-    }
 
-    val mc2f = chbefore.map(f => classNameofFile(f._1) -> f).toMap
+    val mc2f = chbefore.map(f => classNameofFile(f._1, cp) -> f).toMap
 
     println(mc2f.size + " " + classes.size)
     // nested classes = tdg.nodes.filter(n => n._1.contains("$"))
@@ -116,15 +142,17 @@ object GeneralizationAnalyzer {
 
     //println(fgens.map(r => r._1 + " " + r._2 + "\n\t" + r._3.mkString("\n\t")).mkString("\n"))
 
-    def summary(t: List[String], m: Map[String, (String, FileChange)]) = {
+    def summary(t: List[String], m: Map[String, (String, FileChange)], m1: Map[String, (String, FileChange)] ) = {
       val s = t.map(f => (m(f)._2.times, m(f)._2.amount)).foldLeft((0, 0, 0))((s, ta) => (s._1 + ta._1, s._2 + ta._2, s._3 + 1))
       // times, amount, mean times, mean amount, files
-      (s._1, s._2, s._1.toDouble/s._3, s._2.toDouble/s._3, s._3)
+      if ( m1 == null )
+        (s._1, s._2, s._1.toDouble/s._3, s._2.toDouble/s._3, s._3)
+      else {
+        val s1 = t.map(f => (m1(f)._2.times, m1(f)._2.amount)).foldLeft((0, 0, 0))((s, ta) => (s._1 + ta._1, s._2 + ta._2, s._3 + 1))
+        val delta = (s1._1 - s._1, s1._2 - s._2, s1._3)
+        (delta._1, delta._2, delta._1.toDouble/delta._3, delta._2.toDouble/delta._3, delta._3)
+      }
     }
-
-    println("클래스 변경량 - " + summary(classes.toList, mc2f))
-    println("일반 클래스 변경량 - " + summary(gens.keys.toList, mc2f))
-    println(gens.keys.mkString(", "))
 
 
     // gen 클래스의 나중 변경
@@ -134,7 +162,7 @@ object GeneralizationAnalyzer {
     println(added.size + " files are added. " + ( chbefore.size - (ch.size - added.size) ) + " files are deleted, since " + c(cid).date)
     println(renamed.map(r => r._1.name + " -> " + r._2.name).mkString("\n"))
 
-    val mc2flater = ch.map(f => (classNameofFile(f._1), f)).toMap
+    val mc2flater = ch.map(f => (classNameofFile(f._1, cp), f)).toMap
 
     println("변경량 이전 (Java) - " + timesAndamount(chbefore))
     println("변경량 전체 (Java) - " + timesAndamount(ch))
@@ -145,19 +173,42 @@ object GeneralizationAnalyzer {
     // 이 후 전체 변경량 = evolved + added
     // 클래스 이름, 횟수, 변경량으로 맵 테이블 만들면 됨. 그리고, gen 클래스 확인.
 
-    val (addedc, deletedc, renamedc) = (added.map(fc => classNameofFile(fc.name)), deleted.map(fc => classNameofFile(fc.name)), renamed.map(fc => classNameofFile(fc._1.name)))
+    val (addedc, deletedc, renamedc) = (added.map(fc => classNameofFile(fc.name, cp)), deleted.map(fc => classNameofFile(fc.name, cp)), renamed.map(fc => classNameofFile(fc._1.name, cp)))
     val modifiedc = classes.filter(c => !addedc.contains(c) && !deletedc.contains(c)).toList
     println("now = clsses + added - deleted (renamed): " + mc2flater.size + " = " + classes.size + " + " + addedc.size + " - " + deletedc.size + " ( " + renamedc.size + " )")
     // deleted contains renamed
 
-    println("추가된 변경량 - " + summary(addedc, mc2flater))
-    println("재명명 변경량 - " + summary(renamed.map(r => classNameofFile(r._2.name)), mc2flater))
-    println("재명명 변경량 이전 - " + summary(renamed.map(r => classNameofFile(r._1.name)), mc2f))
-    println("기존  변경량 - " + summary(modifiedc, mc2flater))
-    println("기존  변경량 이전 - " + summary(modifiedc, mc2f))
+    println("추가된 변경량 - " + summary(addedc, mc2flater, null))
+    println("재명명 변경량 - " + summary(renamed.map(r => classNameofFile(r._2.name, cp)), mc2flater, null))
+    println("재명명 변경량 이전 - " + summary(renamed.map(r => classNameofFile(r._1.name, cp)), mc2f, null))
+    println("기존  변경량 - " + summary(modifiedc, mc2flater, null))
+    println("기존  변경량 이전 - " + summary(modifiedc, mc2f, null))
 
-    //val evolved =
+    println("클래스 변경량 - " + summary(classes.toList, mc2f, null))
+    println("일반 클래스 변경량 - " + summary(gens.keys.toList, mc2f, null))
+    val impl = gens.flatMap(g => g._2.map(_._2)).filter(c => !deletedc.contains(c)).toList
+    println("구현 클래스 변경량 - " + summary(impl, mc2f, null))
 
+    println(gens.keys.mkString(", "))
+
+    val classes1 = classes.filter(c => !deletedc.contains(c))
+    val gens1: Map[String, List[(String, String)]] = gens.filter(g => !deletedc.contains(g._1))
+    val impl1 = gens.flatMap(g => g._2.map(_._2).filter(c => !deletedc.contains(c)))
+
+    println("클래스 추후 변경량 " + summary(classes1.toList, mc2f, mc2flater))
+    println("인터페이스 추후 변경량 " + summary(gens1.keys.toList, mc2f, mc2flater))
+    println("구현 추후 변경량 " + summary(impl1.toList, mc2f, mc2flater) )
+
+
+    val (coall, cobefore) = analyzer.cochange(ch, chbefore) // (f -> map(f, int))
+    // 전체 중 co change 파일을 가지고 있는 파일 수는? co-change 파일을 가진 파일은 평균적으로 몇 개 co-change를 가지고 있고, co-change 횟수는 얼마인가?
+
+    def summaryCochange(co: Map[String, Map[String, Int]]) = {
+      val cosum = co.foldLeft((0, 0, 0))((s, f) => (s._1 + f._2.size, s._2 + f._2.foldLeft(0)((s, f1) => s + f1._2), s._3 + 1))
+
+      //cochange 파일, 전체
+      (cosum._3, cosum._1, cosum._2, cosum._1.toDouble/cosum._3, cosum._2.toDouble/cosum._3)
+    }
 
   }
 }
