@@ -13,17 +13,17 @@ class FileChange(f: String, cid: String) {
   var birth = cid //commit id
   var death = ""
 
-  //var changes = Map[String, List[GitDiff]]()
-  var cochanges = Map[String, List[FileChange]]()
+  var cochanges = Map[Int, List[FileChange]]()  // Commit Order -> changed files
   var renamedfrom: (GitCommit, FileChange) = (null, null)
   var times = 0
   var amount = 0
 
+  //var changes = List[(String, Int, List[String])]() // commit id, change amount, co-changes
   def summary = name + " (" + times + ", " + amount + "): \t" + birth + "~" + death + ", cochanged#" + cochanges.size //.values.mkString("\n\t")
 }
 
-import ChangeType._
 
+import ChangeType._
 object GitChanges {
 
   def getchanges(commits: List[GitCommit], details: Map[String, List[GitDiff]]) : Map[String, FileChange] = {
@@ -122,7 +122,7 @@ object GitChanges {
       })
       if (cochanged.length > 0) {
         val coset = cochanged.distinct
-        coset.foreach(cc => cc.cochanges += (c.commitid -> coset))
+        coset.foreach(cc => cc.cochanges += (c.order -> coset))
       }
     })
 

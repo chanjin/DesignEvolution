@@ -47,13 +47,14 @@ class GitCommit(cid: String, a: String, d: DateTime, ord: Int, comm: List[String
   val date = d
   val comment = comm
   val changedfs = fs
-  private val order = ord // the recent commit order is 0
-  def isBefore(c: GitCommit) = order > c.order
+  var order = ord // the recent commit order is 0
+  def isBefore(c: GitCommit) = order < c.order
 
   def summary = commitid + ": " + date + " by " + author +  ", " + changedfs.length + " files are changed"
 }
 
 object GitCommit {
+
   private def commitFrom(strs: List[String], commit_order: Int): (String, GitCommit) = {
     val cid = strs.head.substring(7)
     var author = ""
@@ -79,7 +80,7 @@ object GitCommit {
         date = DateTime.parse(l.substring(6).trim, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss Z"))
       }
       else {
-        assert(true, "New header component " + l)
+        assert(false, "New header component " + l)
       }
     })
 
@@ -116,11 +117,15 @@ object GitCommit {
       }
       strs = l :: strs
     }
+
     if (!beginning) {
       order += 1
       commits ::= commitFrom(strs.reverse, order)
     }
 
+    commits.foreach(c => {
+      c._2.order = order - c._2.order
+    })
     commits.toMap
   }
 }
