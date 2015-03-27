@@ -9,10 +9,11 @@
  */
 
 
-package config
+package layer.configuration
+
+import java.io._
 
 import scala.io._
-import java.io._
 
 
 class ProjectConfiguration(bi: ProjectBasicInfo) {

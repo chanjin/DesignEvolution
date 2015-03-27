@@ -1,8 +1,8 @@
 package layer
 
-import config.Project.StructureKind._
-import config.{ProjectBasicInfo, Project}
-import layer.configuration.Configuration
+import layer.configuration.{ProjectBasicInfo, Project}
+import Project.StructureKind._
+import config.Configuration
 import layer.constructor.{GraphFile, GraphConstructor}
 import layer.module._
 
@@ -12,10 +12,11 @@ import layer.module._
 
 object StructureExtractor {
 
-  def extractGeneralization(tdg: TypeStructure):  Map[String, List[(String, String)]] = {
+  def extractGeneralization(tdg: TypeStructure):  Map[String, List[String]] = {
     val gens = tdg.edges.filter(e => e.isSubtypeEdge).map(e => (e.getTarget.value, e.getSource.value)).groupBy(_._1)
+    gens.map(g => (g._1 -> g._2.map(_._2)))
     //println(gens.map(g => g._1 + "\n\t" + g._2.mkString("\n\t")).mkString("\n"))
-    gens
+    //gens
   }
 
   def getTypeGraph(p: String, jar: String) = {

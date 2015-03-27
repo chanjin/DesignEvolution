@@ -9,6 +9,8 @@
 
 package layer.constructor
 
+import layer.configuration
+import layer.configuration.Project
 import layer.module._
 import config._
 import org.apache.bcel.util.Repository
@@ -102,12 +104,12 @@ object GraphConstructor {
     }
 
     println(tdg.edges.size)
-    GraphFile.store(config.Project.get.getInputPath, GraphFile.storeTypeGraph(tdg))
+    GraphFile.store(Project.get.getInputPath, GraphFile.storeTypeGraph(tdg))
     (tdg, PackageStructure.constructPackageStructure(tdg))
   }
 
   def toDot(node2id: scala.collection.mutable.Map[String, Int], edges: List[DepEdge], name: String): String = {
-    val dotname = config.Project.get.getOutputPath + "/" + name
+    val dotname = configuration.Project.get.getOutputPath + "/" + name
     val nodeshape = "node [shape=plaintext, fontname=Skia, fontsize=20];"
     val edgestyle = "edge [fontname=Skia, fontsize = 10, labelfontname=Skia];"
     def edgeSimple(e: DepEdge) = "[color=\"black\", arrowhead=\"vee\", label=\"" +

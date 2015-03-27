@@ -10,6 +10,7 @@
 package layer.experiments
 
 import config._
+import layer.configuration.{Project, ProjectConfiguration}
 import layer.module._
 import java.io.File
 import layer.constructor._

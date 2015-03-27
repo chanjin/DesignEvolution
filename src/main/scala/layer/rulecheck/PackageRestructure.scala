@@ -1,5 +1,6 @@
 package layer.rulecheck
 
+import layer.configuration.ProjectConfiguration
 import layer.module._
 import config._
 

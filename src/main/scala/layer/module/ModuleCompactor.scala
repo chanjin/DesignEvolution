@@ -1,5 +1,7 @@
 package layer.module
 
+import layer.configuration.Project
+
 /**
  * ModuleCompactor.scala
  *
@@ -155,5 +157,5 @@ abstract class ModuleCompactor[S <: ModuleStructure, T <: ModuleNode] {
 }
 
 object ModuleCompactor {
-  def retainPackages = config.Project.get.retainPackages
+  def retainPackages = Project.get.retainPackages
 }

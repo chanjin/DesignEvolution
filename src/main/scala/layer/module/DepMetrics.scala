@@ -9,6 +9,7 @@
 
 package layer.module
 
+import layer.configuration.Project
 import layer.util._
 import config._
 

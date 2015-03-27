@@ -1,6 +1,7 @@
 
 package layer.rulecheck
 
+import layer.configuration.Project
 import layer.module._
 
 /**
@@ -13,7 +14,7 @@ import layer.module._
  */
 
 class LayeredModuleInvestigator(lps: LayerModuleStructure) {
-  val prefix = config.Project.prefix
+  val prefix = Project.prefix
 
   private def getModulesOfPackage(pkgname: String): List[LayerModuleNode] = {
     lps.nodes.values.filter(m => (m.asInstanceOf[LayerModuleNode].pkgname == pkgname)).toList.

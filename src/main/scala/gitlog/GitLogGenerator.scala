@@ -5,7 +5,8 @@ package gitlog
  */
 
 import java.io.File
-import layer.configuration.Configuration
+import config.Configuration
+
 import scala.io.Source
 import sys.process._
 

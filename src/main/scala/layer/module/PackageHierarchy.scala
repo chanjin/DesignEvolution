@@ -8,6 +8,8 @@
  */
 package layer.module
 
+import layer.configuration.Project
+
 /**
  * HierarchyNode - Node in package ownership hierarchy
  * @author chanjinpark
@@ -102,7 +104,7 @@ class PackageHierarchy(pdg: PackageStructure) {
     }
     addEdgeR(treeroot)
 
-    val project = config.Project.get
+    val project = Project.get
     Graph2Dot.toDotType(hierarchy, dotname)
   }
 }

@@ -9,6 +9,8 @@
 
 package layer.module
 
+import layer.configuration
+import layer.configuration.Project
 import layer.util._
 import config._
 
@@ -63,7 +65,7 @@ object Graph2Dot {
 
   def toDotType(g: DependencyGraph, name: String, nodelist: List[NodeElem]): Unit = {
     //val dotname = if ( dotfilename.indexOf("/") != -1) dotfilename.substring(dotfilename.lastIndexOf("/") + 1) else dotfilename
-    val dotname = config.Project.get.getOutputPath + "/" + name
+    val dotname = Project.get.getOutputPath + "/" + name
     val nodes = g.nodes
     val edges = g.edges
     // nodename -> id map
@@ -86,7 +88,7 @@ object Graph2Dot {
   // toDot filtered by nodelist
   def toDot(g: DependencyGraph, name: String, nodelist: List[NodeElem]): Unit = {
     //val dotname = if ( dotfilename.indexOf("/") != -1) dotfilename.substring(dotfilename.lastIndexOf("/") + 1) else dotfilename
-    val dotname = config.Project.get.getOutputPath + "/" + name
+    val dotname = configuration.Project.get.getOutputPath + "/" + name
     val nodes = g.nodes
     val edges = g.edges
     val mns = nodes.values.toList.filter(nodelist.contains(_))
@@ -106,7 +108,7 @@ object Graph2Dot {
 
   def toDotTypeGrouped(mns: List[ModuleNode], edges: List[DepEdge], name: String): Unit = {
     //val dotname = if ( dotfilename.indexOf("/") != -1) dotfilename.substring(dotfilename.lastIndexOf("/") + 1) else dotfilename
-    val dotname = config.Project.get.getOutputPath + "/" + name
+    val dotname = configuration.Project.get.getOutputPath + "/" + name
 
     def nodeStringTypeNameOnly(n: NodeElem, node2id: String => Int) =
       node2id(n.toString) + "[ label=\"" + n.toString.substring(n.toString.lastIndexOf(".") + 1) + "\"]"
@@ -145,7 +147,7 @@ object Graph2Dot {
 
   def toDotTypeSubtype(mns: List[ModuleNode], edges: List[DepEdge], overridedNodes: List[NodeElem], name: String): Unit = {
     //val dotname = if ( dotfilename.indexOf("/") != -1) dotfilename.substring(dotfilename.lastIndexOf("/") + 1) else dotfilename
-    val dotname = config.Project.get.getOutputPath + "/" + name
+    val dotname = configuration.Project.get.getOutputPath + "/" + name
 
     def nodeStringTypeNameOnly(n: NodeElem, node2id: String => Int) = {
       node2id(n.toString) + "[ label=\"" +

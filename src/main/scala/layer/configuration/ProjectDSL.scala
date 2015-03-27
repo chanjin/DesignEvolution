@@ -7,7 +7,7 @@
  *
  */
 
-package config
+package layer.configuration
 
 import scala.util.parsing.combinator._
 

@@ -1,5 +1,7 @@
 package layer.module
 
+import layer.configuration.Project
+
 /**
  * PackageCompactor.scala
  *
@@ -41,7 +43,7 @@ class PackageCompactor extends ModuleCompactor[PackageStructure, PackageNode] {
 
   def retains(key: String): Boolean = {
     //println(key + ": " + config.Project.get.retainPackages)
-    config.Project.get.retainPackages.contains(key)
+    Project.get.retainPackages.contains(key)
   }
 }
 

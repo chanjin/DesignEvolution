@@ -9,6 +9,7 @@
  */
 package layer.module
 
+import layer.configuration.Project
 import layer.util._
 
 
@@ -29,7 +30,7 @@ object Graph2File {
   }
 
   def toFileModule(g: ModuleStructure, dotfilename: String): Unit = {
-    toFileModule(g, config.Project.get.outpath + "/" + dotfilename, g.nodes.values.toList)
+    toFileModule(g, Project.get.outpath + "/" + dotfilename, g.nodes.values.toList)
   }
 
   // toDot filtered by nodelist

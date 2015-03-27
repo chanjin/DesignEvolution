@@ -2,8 +2,8 @@ package gitlog
 
 import java.io.File
 import java.nio.charset._
+import config.Configuration
 
-import layer.configuration.Configuration
 import scala.io.{Codec, Source}
 
 /**

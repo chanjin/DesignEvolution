@@ -12,6 +12,7 @@ package layer.experiments
 import java.io._
 import config._
 import layer.bcel._
+import layer.configuration.{Project, ProjectBasicInfo, ProjectConfiguration}
 
 
 object Main {

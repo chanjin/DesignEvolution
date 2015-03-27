@@ -6,22 +6,6 @@ import org.joda.time.DateTime
  * Created by chanjinpark on 15. 3. 16..
  */
 
-class FileChange(f: String, cid: String) {
-  // times, amount, period
-  // co-changed (a, 4) 파일 a와 4번 변경됨
-  val name = f
-  var birth = cid //commit id
-  var death = ""
-
-  var cochanges = Map[Int, List[FileChange]]()  // Commit Order -> changed files
-  var renamedfrom: (GitCommit, FileChange) = (null, null)
-  var times = 0
-  var amount = 0
-
-  //var changes = List[(String, Int, List[String])]() // commit id, change amount, co-changes
-  def summary = name + " (" + times + ", " + amount + "): \t" + birth + "~" + death + ", cochanged#" + cochanges.size //.values.mkString("\n\t")
-}
-
 
 import ChangeType._
 object GitChanges {
@@ -41,15 +25,13 @@ object GitChanges {
               fchanges -= d.to
               println("duplicate added - " + c.date + ": " + d.to + " --- " + c.commitid)
             }
-            //assert(!fchanges.contains(d.to), c.summary + ": " + d.summary)
+
+            if (d.ndel > 0)
+              println("file added but it has deletion lines (" + d.ndel + ", " + c.date + "), " + d.to + ", " + c.commitid)
+
             val fc = new FileChange(d.to, c.commitid)
             fchanges += (d.to -> fc)
-
-            fc.times += 1
-            fc.amount += d.nadd
-            if (d.ndel > 0) {
-              println("file added but it has deletion lines (" + d.ndel + ", " + c.date + "), " + d.to + ", " + c.commitid)
-            }
+            FileChange.change(fc, c.order, d.nadd)
             cochanged ::= fc
           }
 
@@ -61,10 +43,9 @@ object GitChanges {
             }
             val fc = fchanges(d.from)
             fc.death = c.commitid
-            fc.times += 1
-            fc.amount += d.ndel
             fchanges -= d.from
 
+            FileChange.change(fc, c.order, d.ndel)
             cochanged ::= fc
           }
 
@@ -77,8 +58,8 @@ object GitChanges {
               fchanges += (d.to -> (new FileChange(d.to, c.commitid)))
             }
             val fc = fchanges(d.to)
-            fc.times += 1
-            fc.amount += (d.ndel + d.nadd)
+
+            FileChange.change(fc, c.order, d.ndel + d.nadd)
             cochanged ::= fc
           }
 
@@ -107,11 +88,10 @@ object GitChanges {
               val fc = new FileChange(d.to, c.commitid)
               fchanges += (d.to -> fc)
 
-              fc.times = fcfrom.times + 1
-              fc.amount = fcfrom.amount + ( d.nadd + d.ndel )
+              FileChange.change(fc, c.order, fcfrom.amount + ( d.nadd + d.ndel ))
               fc.renamedfrom = (c, fcfrom)
-              cochanged ::= fc
 
+              cochanged ::= fc
               fchanges -= d.from
             }
           }
@@ -122,9 +102,10 @@ object GitChanges {
       })
       if (cochanged.length > 0) {
         val coset = cochanged.distinct
-        coset.foreach(cc => cc.cochanges += (c.order -> coset))
+        coset.foreach(fc => fc.cochanges ::= (c.order, coset.filter(!_.equals(fc))))
       }
     })
+
 
     fchanges
   }
