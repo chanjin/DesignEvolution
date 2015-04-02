@@ -14,3 +14,6 @@ libraryDependencies += "joda-time" % "joda-time" % "2.7"
 
 libraryDependencies += "org.scala-lang.modules" % "scala-parser-combinators_2.11" % "1.0.2"
 
+libraryDependencies += "org.apache.bcel" % "bcel" % "5.2"
+
+libraryDependencies += "org.antlr" % "antlr4-runtime" % "4.5"

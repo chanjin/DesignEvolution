@@ -19,10 +19,12 @@ object GitLogGenerator {
   // --date-order option is for chronical order of commits
   def generateLogs(pname: String) = {
     val f = Configuration.logfile(pname)
-    val repo = Configuration.gitrepo(pname)
-    val command = "git --git-dir " + repo + " log --name-status --date=iso --date-order"
+    if (!(new File(f)).exists()) {
+      val repo = Configuration.gitrepo(pname)
+      val command = "git --git-dir " + repo + " log --name-status --date=iso --date-order"
 
-    ( command #> new File(f) )!
+      (command #> new File(f)) !
+    }
   }
 
   def generateCommitDetails(pname: String, cid: String) = {
