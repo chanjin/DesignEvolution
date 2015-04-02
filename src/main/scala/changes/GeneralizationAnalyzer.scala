@@ -119,7 +119,6 @@ object GeneralizationAnalyzer {
           else
             ren = ren._2.renamedfrom
         }
-        //if (!found) assert(!commitmap(fc.birth).isBefore(c) || commitmap(fc.birth) != c, "나중에 생긴 파일이어야 함 " + commitmap(fc.birth).summary)
         (found, ren._2, fc)
       }
     }
@@ -134,7 +133,7 @@ object GeneralizationAnalyzer {
     (addedfiles, deletedfiles, renamed)
   }
 
-  def main(args: Array[String]) = {
+  def main(args: Array[String]): Unit = {
     // junit 4.11 c2e4d911fadfbd64444fb285342a8f1b72336169,  @marcphilipp marcphilipp released this on 15 Nov 2012 · 747 commits to master since this release
     val p = "junit"
     val f = Configuration.jarfile(p, "junit-4.11.jar")
