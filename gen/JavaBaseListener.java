@@ -1,4 +1,4 @@
-package antlrjava.recognizer;// Generated from /Users/chanjinpark/GitHub/DesignEvolution/src/main/resources/java-grammar/Java.g4 by ANTLR 4.5
+// Generated from /Users/chanjinpark/GitHub/DesignEvolution/src/main/resources/java-grammar/Java.g4 by ANTLR 4.5
 
 import java.util.HashMap;
 

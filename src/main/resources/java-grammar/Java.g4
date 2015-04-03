@@ -39,18 +39,25 @@
  *  $ grun Java compilationUnit *.java
  */
 grammar Java;
+@header {
+import java.util.HashMap;
+}
 
+@members {
+public HashMap structure = new HashMap();
+public ArrayList importList = new ArrayList();
+}
 // starting point for parsing a java file
 compilationUnit
-    :   packageDeclaration? importDeclaration* typeDeclaration* EOF
+    :   packageDeclaration? (i = importDeclaration { importList.add(i.value); } )* typeDeclaration* EOF
     ;
 
 packageDeclaration
-    :   annotation* 'package' qualifiedName ';'
+    :   annotation* 'package' p=qualifiedName { structure.put("pkgdecl", $p.name); } ';'
     ;
 
-importDeclaration
-    :   'import' 'static'? qualifiedName ('.' '*')? ';'
+importDeclaration returns [String value]
+    :   'import' 'static'? i=qualifiedName { $value = $i.name; } ('.' '*' { $value = $value + ".*"; } )? ';'
     ;
 
 typeDeclaration
@@ -87,8 +94,8 @@ variableModifier
     |   annotation
     ;
 
-classDeclaration
-    :   'class' Identifier typeParameters?
+classDeclaration returns [String name]
+    :   'class' id=Identifier { $name = $id.text; } (typeParameters)?
         ('extends' type)?
         ('implements' typeList)?
         classBody
@@ -304,8 +311,8 @@ constructorBody
     :   block
     ;
 
-qualifiedName
-    :   Identifier ('.' Identifier)*
+qualifiedName returns [String name]
+    :   id=Identifier { $name = $id.text; } ('.' id=Identifier { $name = $name + "." + $id.text; } )*
     ;
 
 literal
