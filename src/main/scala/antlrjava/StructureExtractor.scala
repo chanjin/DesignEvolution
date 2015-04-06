@@ -13,8 +13,13 @@ class StructureParseResult {
   var childresults = List[StructureParseResult]()
 }
 
-class StructureExtractor extends JavaBaseVisitor[StructureParseResult]{
 
+
+class DefType {
+  var name = ""
+}
+
+class StructureExtractor extends JavaBaseVisitor[StructureParseResult]{
 
   override def visitCompilationUnit(@NotNull ctx: JavaParser.CompilationUnitContext): StructureParseResult = {
     val result = visitChildren(ctx)
@@ -25,12 +30,32 @@ class StructureExtractor extends JavaBaseVisitor[StructureParseResult]{
   }
 
 
-  //visitPackageDeclaration
+  var packagename = ""
   override def visitPackageDeclaration(@NotNull ctx: JavaParser.PackageDeclarationContext): StructureParseResult = {
+    packagename = ctx.qualifiedName.Identifier().toArray.mkString("."))
+    return visitChildren(ctx)
+  }
+
+
+  var types = List[DefType]()
+  var curType: DefType = null
+  override def visitTypeDeclaration(@NotNull ctx: JavaParser.TypeDeclarationContext): StructureParseResult = {
+    if ( curType == null) curType = new DefType
     val result = visitChildren(ctx)
-    result.packagename = ctx.qualifiedName.Identifier().toArray.mkString(".")
-    println(result.packagename)
+    types ::= curType
+    curType = null
     return result
+  }
+
+  override def visitClassDeclaration(@NotNull ctx: JavaParser.ClassDeclarationContext): StructureParseResult = {
+    // visitTypeParameters
+    // parameter 가지는 지만 체크
+
+    return visitChildren(ctx)
+  }
+
+  override def visitTypeParameters(@NotNull ctx: JavaParser.TypeParametersContext): StructureParseResult = {
+    return visitChildren(ctx)
   }
 
   protected override def defaultResult() = {
@@ -51,6 +76,8 @@ object StructureExtractor {
       val parser: JavaParser = new JavaParser(tokens)
       val t: ParserRuleContext = parser.compilationUnit
       println(parser.structure.get("pkgdecl") + " : " + parser.structure.size())
+      println(parser.importList.toArray().mkString(", "))
+
       t.accept(new StructureExtractor)
 
       System.out.println(t.toStringTree(parser))

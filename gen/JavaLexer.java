@@ -1,6 +1,7 @@
 // Generated from /Users/chanjinpark/GitHub/DesignEvolution/src/main/resources/java-grammar/Java.g4 by ANTLR 4.5
 
 import java.util.HashMap;
+import java.util.ArrayList;
 
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
@@ -134,7 +135,8 @@ public class JavaLexer extends Lexer {
 	}
 
 
-	HashMap structure = new HashMap();
+	public HashMap structure = new HashMap();
+	public ArrayList importList = new ArrayList();
 
 
 	public JavaLexer(CharStream input) {

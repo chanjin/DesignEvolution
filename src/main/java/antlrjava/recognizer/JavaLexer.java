@@ -1,6 +1,7 @@
 package antlrjava.recognizer;// Generated from /Users/chanjinpark/GitHub/DesignEvolution/src/main/resources/java-grammar/Java.g4 by ANTLR 4.5
 
 import java.util.HashMap;
+import java.util.ArrayList;
 
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
@@ -57,7 +58,7 @@ public class JavaLexer extends Lexer {
 		"HexSignificand", "BinaryExponent", "BinaryExponentIndicator", "BooleanLiteral", 
 		"CharacterLiteral", "SingleCharacter", "StringLiteral", "StringCharacters", 
 		"StringCharacter", "EscapeSequence", "OctalEscape", "UnicodeEscape", "ZeroToThree", 
-		"NullLiteral", "LPAREN", "RPAREN", "LBRACE", "RBRACE", "LBRACK", "RBRACK", 
+		"NullLiteral", "LPAREN", "RPAR;EN", "LBRACE", "RBRACE", "LBRACK", "RBRACK",
 		"SEMI", "COMMA", "DOT", "ASSIGN", "GT", "LT", "BANG", "TILDE", "QUESTION", 
 		"COLON", "EQUAL", "LE", "GE", "NOTEQUAL", "AND", "OR", "INC", "DEC", "ADD", 
 		"SUB", "MUL", "DIV", "BITAND", "BITOR", "CARET", "MOD", "ADD_ASSIGN", 
@@ -134,7 +135,8 @@ public class JavaLexer extends Lexer {
 	}
 
 
-	HashMap structure = new HashMap();
+	public HashMap structure = new HashMap();
+	public ArrayList importList = new ArrayList();
 
 
 	public JavaLexer(CharStream input) {

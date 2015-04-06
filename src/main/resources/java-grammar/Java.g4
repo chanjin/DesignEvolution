@@ -41,6 +41,7 @@
 grammar Java;
 @header {
 import java.util.HashMap;
+import java.util.ArrayList;
 }
 
 @members {
@@ -49,7 +50,7 @@ public ArrayList importList = new ArrayList();
 }
 // starting point for parsing a java file
 compilationUnit
-    :   packageDeclaration? (i = importDeclaration { importList.add(i.value); } )* typeDeclaration* EOF
+    :   packageDeclaration? (i = importDeclaration { importList.add($i.value); } )* typeDeclaration* EOF
     ;
 
 packageDeclaration
@@ -105,8 +106,8 @@ typeParameters
     :   '<' typeParameter (',' typeParameter)* '>'
     ;
 
-typeParameter
-    :   Identifier ('extends' typeBound)?
+typeParameter returns [String name]
+    :   id=Identifier { $name = $id.text; } ('extends' typeBound)?
     ;
 
 typeBound
