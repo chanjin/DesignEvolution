@@ -34,7 +34,4 @@ object C2F {
   def getClassesFromFiles(files: List[FileChange]) = {
     files.map(fc => C2F.classNameofFile(fc.name, C2F.cp))
   }
-
-
-
 }

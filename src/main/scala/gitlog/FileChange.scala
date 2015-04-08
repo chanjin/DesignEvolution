@@ -78,7 +78,7 @@ object FileChange {
   def summaryCochange(co: Map[String, Map[String, Int]]) = {
     val cosum = co.foldLeft((0, 0, 0))((s, f) => (s._1 + f._2.size, s._2 + f._2.foldLeft(0)((s, f1) => s + f1._2), s._3 + 1))
 
-    (cosum._3, cosum._1, cosum._2, cosum._1.toDouble/cosum._3, cosum._2.toDouble/cosum._3)
+    (cosum._3, cosum._1, cosum._2, cosum._1/cosum._3, cosum._2/cosum._3)
     //files#, cochanged files#, cochanged freq.
   }
 }

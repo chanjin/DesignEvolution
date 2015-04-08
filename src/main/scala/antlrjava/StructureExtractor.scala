@@ -8,63 +8,69 @@ import org.antlr.v4.runtime._
 import org.antlr.v4.runtime.atn.PredictionMode
 import org.antlr.v4.runtime.misc.NotNull
 
-class StructureParseResult {
-  var packagename = ""
-  var childresults = List[StructureParseResult]()
+
+
+case class DefMethod(retType: String, signature: String) { }
+
+case class DefType(n: String, isIntf: Boolean) {
+  def name = n
+  def isInterface = isIntf
+  var pkgname = ""
+  var methods = List[DefMethod]()
 }
 
+class StructureExtractor extends JavaBaseVisitor[List[Any]]{
+  var types = List[DefType]()
 
-
-class DefType {
-  var name = ""
-}
-
-class StructureExtractor extends JavaBaseVisitor[StructureParseResult]{
-
-  override def visitCompilationUnit(@NotNull ctx: JavaParser.CompilationUnitContext): StructureParseResult = {
+  override def visitCompilationUnit(@NotNull ctx: JavaParser.CompilationUnitContext): List[Any] = {
     val result = visitChildren(ctx)
-    result.childresults.reverse.foreach(r => println(r))
-    println(result.packagename)
-    println()
+    println("visitCompilationUnit " + result.mkString("\n"))
     return result
   }
 
-
   var packagename = ""
-  override def visitPackageDeclaration(@NotNull ctx: JavaParser.PackageDeclarationContext): StructureParseResult = {
-    packagename = ctx.qualifiedName.Identifier().toArray.mkString("."))
-    return visitChildren(ctx)
+  override def visitPackageDeclaration(@NotNull ctx: JavaParser.PackageDeclarationContext): List[Any] = {
+    val result = visitChildren(ctx)
+    println("visitPackageDeclaration " + result.mkString(" : "))
+    return result
   }
 
+  override def visitImportDeclaration(@NotNull ctx: JavaParser.ImportDeclarationContext): List[Any] = {
+    val result = visitChildren(ctx)
+    retult
+  }
 
-  var types = List[DefType]()
   var curType: DefType = null
-  override def visitTypeDeclaration(@NotNull ctx: JavaParser.TypeDeclarationContext): StructureParseResult = {
-    if ( curType == null) curType = new DefType
+  override def visitTypeDeclaration(@NotNull ctx: JavaParser.TypeDeclarationContext): List[Any] = {
+    if ( curType == null) curType = new DefType("a", true)
     val result = visitChildren(ctx)
     types ::= curType
     curType = null
+
+    println("visitTypeDeclaration " + result.mkString(" : "))
     return result
   }
 
-  override def visitClassDeclaration(@NotNull ctx: JavaParser.ClassDeclarationContext): StructureParseResult = {
+  override def visitClassDeclaration(@NotNull ctx: JavaParser.ClassDeclarationContext): List[Any] = {
     // visitTypeParameters
     // parameter 가지는 지만 체크
-
-    return visitChildren(ctx)
+    val result = visitChildren(ctx)
+    println("visitClassDeclaration " + result.mkString(" : "))
+    return result
   }
 
-  override def visitTypeParameters(@NotNull ctx: JavaParser.TypeParametersContext): StructureParseResult = {
-    return visitChildren(ctx)
+  override def visitTypeParameters(@NotNull ctx: JavaParser.TypeParametersContext): List[Any] = {
+    val result = visitChildren(ctx)
+    println("visitTypeParameters " + result.mkString(" : "))
+    return result
   }
 
   protected override def defaultResult() = {
-    new StructureParseResult
+    List[Any]()
   }
 
-  protected override def aggregateResult(aggregate: StructureParseResult, nextResult: StructureParseResult) = {
-    aggregate.childresults ::= nextResult
-    aggregate
+  protected override def aggregateResult(aggregate: List[Any], nextResult: List[Any]) = {
+    nextResult ++ aggregate
   }
 }
 
@@ -80,6 +86,7 @@ object StructureExtractor {
 
       t.accept(new StructureExtractor)
 
+      println("--------")
       System.out.println(t.toStringTree(parser))
     }
     catch {

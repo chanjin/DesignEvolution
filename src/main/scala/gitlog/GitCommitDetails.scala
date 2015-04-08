@@ -39,6 +39,7 @@ deleted file mode 100644
  */
 
 object ChangeType extends Enumeration {
+  type ChangeType = Value
   val Modified, Deleted, Added, Renamed = Value
 }
 

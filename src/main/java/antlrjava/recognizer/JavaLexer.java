@@ -58,7 +58,7 @@ public class JavaLexer extends Lexer {
 		"HexSignificand", "BinaryExponent", "BinaryExponentIndicator", "BooleanLiteral", 
 		"CharacterLiteral", "SingleCharacter", "StringLiteral", "StringCharacters", 
 		"StringCharacter", "EscapeSequence", "OctalEscape", "UnicodeEscape", "ZeroToThree", 
-		"NullLiteral", "LPAREN", "RPAR;EN", "LBRACE", "RBRACE", "LBRACK", "RBRACK",
+		"NullLiteral", "LPAREN", "RPAREN", "LBRACE", "RBRACE", "LBRACK", "RBRACK", 
 		"SEMI", "COMMA", "DOT", "ASSIGN", "GT", "LT", "BANG", "TILDE", "QUESTION", 
 		"COLON", "EQUAL", "LE", "GE", "NOTEQUAL", "AND", "OR", "INC", "DEC", "ADD", 
 		"SUB", "MUL", "DIV", "BITAND", "BITOR", "CARET", "MOD", "ADD_ASSIGN", 

@@ -35,16 +35,17 @@ class ChangeDelta(proj: String, jarf: String, cid: String) {
   })
 */
 
+
   def summaryDelta = {
     def summary(t: List[String], m: Map[String, FileChange], m1: Map[String, FileChange] ) = {
       val s = t.map(f => (m(f).times, m(f).amount)).foldLeft((0, 0, 0))((s, ta) => (s._1 + ta._1, s._2 + ta._2, s._3 + 1))
       // times, amount, mean times, mean amount, files
       if ( m1 == null )
-        (s._1, s._2, s._1.toDouble/s._3, s._2.toDouble/s._3, s._3)
+        (s._1, s._2, s._1/s._3, s._2/s._3, s._3)
       else {
         val s1 = t.map(f => (m1(f).times, m1(f).amount)).foldLeft((0, 0, 0))((s, ta) => (s._1 + ta._1, s._2 + ta._2, s._3 + 1))
         val delta = (s1._1 - s._1, s1._2 - s._2, s1._3)
-        (delta._1, delta._2, delta._1.toDouble/delta._3, delta._2.toDouble/delta._3, delta._3)
+        (delta._1, delta._2, delta._1/delta._3, delta._2/delta._3, delta._3)
       }
     }
 
@@ -77,10 +78,6 @@ class ChangeDelta(proj: String, jarf: String, cid: String) {
     println("Amount before - " + FileChange.summaryAmount(amountbefore))
     println("Amount after - " + FileChange.summaryAmount(amountafter))
   }
-
-  summaryDelta
-  summaryCochange
-  summaryAmount
 }
 
 /*
@@ -140,5 +137,8 @@ object GeneralizationAnalyzer {
     val cid = "c2e4d911fadfbd64444fb285342a8f1b72336169"
 
     val delta = new ChangeDelta(p, f, cid)
+    delta.summaryDelta
+    delta.summaryCochange
+    delta.summaryAmount
   }
 }
